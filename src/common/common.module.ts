@@ -1,4 +1,8 @@
 import { Module } from '@nestjs/common';
+import { PostgresExceptionHandler } from './exceptions/pg-handle-exceptions';
 
-@Module({})
+@Module({
+  providers: [PostgresExceptionHandler],
+  exports: [PostgresExceptionHandler]
+})
 export class CommonModule {}

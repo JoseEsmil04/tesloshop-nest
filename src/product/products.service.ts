@@ -7,6 +7,7 @@ import { Product } from './entities/product.entity';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { validate as isUUID } from 'uuid'
 import { ProductImage } from './entities';
+import { User } from 'src/auth/entities/auth.entity';
 
 @Injectable()
 export class ProductsService {
@@ -22,13 +23,14 @@ export class ProductsService {
     private readonly datasource: DataSource
   ){}
 
-  async create(createProductDto: CreateProductDto) {
+  async create(createProductDto: CreateProductDto, user: User) {
 
     const { images = [], ...productDetails } = createProductDto;
     try {
       const product = this.productsRepository.create({
         ...productDetails,
-        images: images.map(image => this.productImageRepository.create({ url: image })) //? Se inserta en product_images
+        images: images.map(image => this.productImageRepository.create({ url: image })), //? Se inserta en product_images
+        user: user
       });
       await this.productsRepository.save(product); //? se Salva TODO
 
@@ -93,7 +95,7 @@ export class ProductsService {
     }
   }
 
-  async update(id: string, updateProductDto: UpdateProductDto) {
+  async update(id: string, updateProductDto: UpdateProductDto, user: User) {
 
     const { images, ...toUpdate } = updateProductDto;
 
@@ -121,7 +123,8 @@ export class ProductsService {
       } else {
         // Cargar de alguna manera...
       }
-  
+      
+      product.user = user
       await queryRunner.manager.save(product) // Guardar
       await queryRunner.commitTransaction(); // Finalmente el commit
 
@@ -150,7 +153,7 @@ export class ProductsService {
     }
   }
 
-  private handleDBExceptions(error: any) {
+  public handleDBExceptions(error: any) {
     // Unique Constraint error
     if(error.code === '23505') {
       throw new BadRequestException(error.detail)
